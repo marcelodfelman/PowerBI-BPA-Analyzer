@@ -452,7 +452,17 @@ class BestPracticesChecker:
             if 'Relationship' in scope_part:
                 target_objects.extend(objects['relationships'])
         
-        return target_objects
+        # Remove duplicates by converting to set and back to list
+        # Use object id to ensure uniqueness since TMDLObject might not be hashable
+        seen = set()
+        unique_objects = []
+        for obj in target_objects:
+            obj_key = (obj.name, obj.object_type, obj.file_path)
+            if obj_key not in seen:
+                seen.add(obj_key)
+                unique_objects.append(obj)
+        
+        return unique_objects
     
     def _evaluate_rule_expression(self, rule: BestPracticeRule, obj: TMDLObject, all_objects: Dict[str, List[TMDLObject]]) -> bool:
         """Evaluate if an object violates a rule"""
@@ -548,7 +558,6 @@ class BestPracticesChecker:
                         actual_unqualified.append(match)
             
             return len(actual_unqualified) > 0
-        return False
         return False
     
     def _check_floating_point_datatype(self, obj: TMDLObject) -> bool:
