@@ -70,51 +70,72 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
         
         self.logger.info("Enhancing analysis with AI-powered insights...")
         
-        # Add AI enhancements to violations (limit to first 5 to avoid timeouts)
-        enhanced_violations = []
-        violations_to_enhance = min(5, len(result['violations']))
+        # Group violations by rule ID
+        violations_by_rule = {}
+        for violation in result['violations']:
+            rule_id = violation.rule_id
+            if rule_id not in violations_by_rule:
+                violations_by_rule[rule_id] = []
+            violations_by_rule[rule_id].append(violation)
         
-        self.logger.info(f"Enhancing {violations_to_enhance} violations with AI explanations...")
+        self.logger.info(f"Found {len(violations_by_rule)} unique violation types across {len(result['violations'])} total violations")
         
-        for i, violation in enumerate(result['violations']):
-            # Only enhance first few violations to avoid long wait times
-            if i < violations_to_enhance:
-                try:
-                    # Find the original object to get DAX code if it's a measure
-                    dax_code = ""
+        # Get AI explanation for each rule type (not each violation)
+        rule_explanations = {}
+        rules_to_enhance = list(violations_by_rule.keys())
+        
+        self.logger.info(f"Enhancing {len(rules_to_enhance)} violation types with AI strategic guidance...")
+        
+        for i, rule_id in enumerate(rules_to_enhance):
+            try:
+                # Get sample violation for this rule
+                sample_violation = violations_by_rule[rule_id][0]
+                violation_count = len(violations_by_rule[rule_id])
+                
+                # Get example objects for this rule
+                example_objects = [v.object_name for v in violations_by_rule[rule_id][:3]]
+                
+                # Find DAX code if applicable
+                dax_examples = []
+                for v in violations_by_rule[rule_id][:2]:  # Get 2 DAX examples max
                     for measure in result['objects'].get('measures', []):
-                        if measure.name == violation.object_name:
-                            dax_code = getattr(measure, 'expression', '')
+                        if measure.name == v.object_name:
+                            dax_examples.append(getattr(measure, 'expression', ''))
                             break
-                    
-                    # Get AI explanation
-                    self.logger.info(f"  Enhancing {i+1}/{violations_to_enhance}: {violation.object_name}...")
-                    ai_explanation = self.get_ai_explanation(violation, dax_code)
-                    
-                    # Create enhanced violation with AI explanation
-                    # Store AI explanation in the violation object's properties
-                    violation.properties = getattr(violation, 'properties', {})
-                    violation.properties['ai_explanation'] = ai_explanation
-                    violation.properties['ai_enhanced'] = True
-                    
-                except Exception as e:
-                    self.logger.warning(f"Could not enhance violation {violation.object_name}: {e}")
-                    violation.properties = getattr(violation, 'properties', {})
-                    violation.properties['ai_enhanced'] = False
+                
+                # Get AI explanation for this rule type
+                self.logger.info(f"  Enhancing rule {i+1}/{len(rules_to_enhance)}: {sample_violation.rule_name} ({violation_count} violations)...")
+                ai_explanation = self.get_rule_explanation(
+                    sample_violation, 
+                    violation_count,
+                    example_objects,
+                    dax_examples
+                )
+                
+                rule_explanations[rule_id] = ai_explanation
+                
+            except Exception as e:
+                self.logger.warning(f"Could not enhance rule {rule_id}: {e}")
+                rule_explanations[rule_id] = None
+        
+        # Apply AI explanations to all violations of each rule type
+        enhanced_violations = []
+        for violation in result['violations']:
+            violation.properties = getattr(violation, 'properties', {})
+            if violation.rule_id in rule_explanations and rule_explanations[violation.rule_id]:
+                violation.properties['ai_explanation'] = rule_explanations[violation.rule_id]
+                violation.properties['ai_enhanced'] = True
             else:
-                # Don't enhance remaining violations to save time/cost
-                violation.properties = getattr(violation, 'properties', {})
                 violation.properties['ai_enhanced'] = False
-            
             enhanced_violations.append(violation)
         
         # Replace violations with enhanced ones
         result['violations'] = enhanced_violations
         
-        # Add strategic recommendations
+        # Add strategic recommendations based on violation types
         try:
             self.logger.info("Generating strategic recommendations...")
-            recommendations = self.get_ai_recommendations(enhanced_violations[:10])  # Limit summary to 10 violations
+            recommendations = self.get_ai_recommendations(violations_by_rule)
             result['ai_recommendations'] = recommendations
             result['ai_enhanced'] = True
             self.logger.info("Strategic recommendations generated successfully!")
@@ -127,6 +148,59 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
         
         self.logger.info("AI enhancement complete!")
         return result
+    
+    
+    def get_rule_explanation(self, violation: Violation, violation_count: int, 
+                            example_objects: List[str], dax_examples: List[str] = None) -> str:
+        """Get AI-powered explanation for a violation rule type"""
+        if not self.ai_enabled:
+            return violation.description
+        
+        try:
+            # Build context about the violations
+            examples_text = f"\n\nExample objects affected:\n" + "\n".join(f"- {obj}" for obj in example_objects)
+            
+            dax_text = ""
+            if dax_examples and len(dax_examples) > 0:
+                dax_text = f"\n\nExample DAX code:\n```dax\n{dax_examples[0][:500]}\n```"
+            
+            prompt = f"""
+            As a Power BI and DAX expert, explain this best practice rule that has {violation_count} violations:
+            
+            Rule: {violation.rule_name}
+            Category: {violation.category}
+            Severity: {violation.severity.name}
+            
+            Standard Description: {violation.description}
+            {examples_text}
+            {dax_text}
+            
+            Please provide a comprehensive explanation for ALL {violation_count} violations of this rule:
+            
+            1. **Why This Matters**: Explain the core issue and why this rule exists
+            2. **Impact**: What are the performance/functionality/maintenance impacts
+            3. **How to Fix**: Step-by-step approach to fix ALL violations of this type
+            4. **Best Practice**: What's the recommended pattern to follow going forward
+            5. **Priority**: Given {violation_count} violations, how urgent is this fix
+            
+            Make it actionable and specific to fixing all violations at once, not just one.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a Power BI and DAX expert who explains technical concepts clearly and provides strategic guidance."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=min(self.max_tokens + 200, 600),  # Allow more tokens for rule-level explanations
+                temperature=self.temperature
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            self.logger.error(f"Error getting AI rule explanation: {e}")
+            return violation.description
     
     def get_ai_explanation(self, violation: Violation, dax_code: str = "") -> str:
         """Get AI-powered explanation for a violation"""
@@ -171,7 +245,84 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
             self.logger.error(f"Error getting AI explanation: {e}")
             return violation.description
     
-    def get_ai_recommendations(self, violations: List[Violation]) -> str:
+    
+    def get_ai_recommendations(self, violations_by_rule: dict) -> str:
+        """Get AI-powered overall recommendations based on violation types"""
+        if not self.ai_enabled or not violations_by_rule:
+            return "No AI-powered recommendations available."
+        
+        try:
+            # Summarize violation types (not individual violations)
+            violation_summary = []
+            total_violations = 0
+            
+            for rule_id, violations in violations_by_rule.items():
+                sample = violations[0]
+                count = len(violations)
+                total_violations += count
+                
+                violation_summary.append({
+                    'rule_id': rule_id,
+                    'rule_name': sample.rule_name,
+                    'category': sample.category,
+                    'severity': sample.severity.name,
+                    'count': count,
+                    'example_objects': [v.object_name for v in violations[:3]]
+                })
+            
+            # Sort by count (most violations first) and severity
+            violation_summary.sort(key=lambda x: (-x['count'], x['severity']))
+            
+            prompt = f"""
+            As a Power BI expert consultant, analyze this model's best practice violations and provide strategic recommendations.
+            
+            Model has {total_violations} total violations across {len(violations_by_rule)} rule types:
+            
+            {json.dumps(violation_summary, indent=2)}
+            
+            Please provide:
+            
+            1. **Top 3 Priority Areas**: Which violation types should be fixed first and why?
+               - Consider severity, count, and impact
+               - Be specific about which rules to tackle
+            
+            2. **Implementation Strategy**: What's the best order to fix these?
+               - Group related fixes together
+               - Identify quick wins vs. larger refactoring
+            
+            3. **Expected Impact**: What benefits will fixing each area bring?
+               - Performance improvements
+               - Maintainability gains
+               - Risk reduction
+            
+            4. **Effort Estimation**: Rough time estimates for fixing each violation type
+               - Which are bulk operations?
+               - Which require careful analysis?
+            
+            5. **Root Cause Patterns**: Do you see any systemic issues?
+               - Are there modeling patterns that should change?
+               - Architectural improvements to consider?
+            
+            Be specific, actionable, and reference actual rule names and counts.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a senior Power BI consultant providing strategic guidance on model optimization."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=800,  # Longer response for strategic recommendations
+                temperature=self.temperature
+            )
+            
+            return response.choices[0].message.content.strip()
+            
+        except Exception as e:
+            self.logger.error(f"Error getting AI recommendations: {e}")
+            return "Unable to generate AI recommendations at this time."
+    
+    def get_ai_explanation_old(self, violations: List[Violation]) -> str:
         """Get AI-powered overall recommendations"""
         if not self.ai_enabled or not violations:
             return "No AI-powered recommendations available."
@@ -286,20 +437,30 @@ if __name__ == "__main__":
     result = analyzer.analyze_model(model_path)
     
     print("🤖 AI-Enhanced Analysis Complete!")
+    print(f"Found {len(result['violations'])} total violations")
     
-    # Get AI recommendations
-    if analyzer.ai_enabled:
+    # Show AI recommendations
+    if analyzer.ai_enabled and 'ai_recommendations' in result:
         print("\n🎯 AI Strategic Recommendations:")
-        print("-" * 40)
-        recommendations = analyzer.get_ai_recommendations(result['violations'])
-        print(recommendations)
+        print("-" * 80)
+        print(result['ai_recommendations'])
         
-        # Show AI explanation for first few violations
-        print("\n💡 AI-Enhanced Explanations:")
-        print("-" * 40)
-        for violation in result['violations'][:3]:
-            print(f"\n{violation.rule_name}:")
-            explanation = analyzer.get_ai_explanation(violation)
-            print(explanation)
+        # Show enhanced violations by rule type
+        print("\n💡 AI-Enhanced Rule Explanations:")
+        print("-" * 80)
+        
+        # Group violations by rule to show AI explanations
+        violations_by_rule = {}
+        for v in result['violations']:
+            if v.rule_id not in violations_by_rule:
+                violations_by_rule[v.rule_id] = []
+            violations_by_rule[v.rule_id].append(v)
+        
+        for rule_id, violations in violations_by_rule.items():
+            sample = violations[0]
+            if sample.properties.get('ai_enhanced'):
+                print(f"\n📋 {sample.rule_name} ({len(violations)} violations)")
+                print(sample.properties.get('ai_explanation', 'No explanation available'))
+                print()
     else:
         print("ℹ️ AI features disabled - no API key provided")
