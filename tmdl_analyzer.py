@@ -513,11 +513,42 @@ class BestPracticesChecker:
     def _check_column_references(self, obj: TMDLObject) -> bool:
         """Check if DAX expression uses fully qualified column references"""
         if isinstance(obj, TMDLMeasure):
-            # Look for unqualified column references
-            pattern = r'\[[^\]]+\](?!\s*\[)'
-            matches = re.findall(pattern, obj.expression)
-            # This is a simplified check - would need more sophisticated parsing
-            return len(matches) > 0
+            # Check for unqualified column references
+            # Qualified: 'TableName'[ColumnName] or TableName[ColumnName] 
+            # Unqualified: [ColumnName] (standalone, not preceded by table name)
+            
+            expression = obj.expression
+            
+            # Pattern to find unqualified column references:
+            # [ColumnName] that is NOT preceded by a table name
+            # Negative lookbehind to ensure it's not: 'TableName'[Column] or TableName[Column]
+            
+            # This regex looks for [something] that is not preceded by:
+            # - 'quoted text' (quoted table name)
+            # - word characters (unquoted table name)
+            unqualified_pattern = r"(?<!')\b(?<!\w)\[[^\]]+\]"
+            
+            unqualified_matches = re.findall(unqualified_pattern, expression)
+            
+            # Additional check: remove false positives by checking context
+            actual_unqualified = []
+            for match in unqualified_matches:
+                match_pos = expression.find(match)
+                if match_pos >= 0:
+                    # Get text before the match
+                    before = expression[:match_pos].rstrip()
+                    
+                    # Check if it's truly unqualified (not part of a table reference)
+                    if (before == "" or 
+                        before[-1] in ",()+*/=<>!& \t\n" or
+                        before.endswith(" AND ") or 
+                        before.endswith(" OR ") or
+                        before.endswith("IF ") or
+                        before.endswith("ISFILTERED ")):
+                        actual_unqualified.append(match)
+            
+            return len(actual_unqualified) > 0
+        return False
         return False
     
     def _check_floating_point_datatype(self, obj: TMDLObject) -> bool:

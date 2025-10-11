@@ -12,6 +12,13 @@ import tempfile
 import traceback
 from werkzeug.utils import secure_filename
 
+# Try to import AI-enhanced analyzer (optional)
+try:
+    from ai_enhanced_analyzer import AIEnhancedTMDLAnalyzer
+    AI_AVAILABLE = True
+except ImportError:
+    AI_AVAILABLE = False
+
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
@@ -189,6 +196,25 @@ HTML_TEMPLATE = """
                 </div>
             </div>
             
+            <!-- Analyzer Type Selection -->
+            <div style="margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                <h3 style="margin-top: 0; color: #333;">🤖 Analyzer Type</h3>
+                <div style="margin: 15px 0;">
+                    <label style="display: block; margin-bottom: 10px; cursor: pointer;">
+                        <input type="radio" name="analyzer_type" value="regular" checked style="margin-right: 8px;">
+                        <strong>Regular Analyzer</strong> - Fast, rule-based analysis using Microsoft's best practices
+                    </label>
+                    <label style="display: block; cursor: pointer;">
+                        <input type="radio" name="analyzer_type" value="ai_enhanced" style="margin-right: 8px;">
+                        <strong>AI-Enhanced Analyzer</strong> - Includes strategic recommendations and detailed explanations (requires OpenAI API key)
+                    </label>
+                </div>
+                <div id="aiWarning" style="display: none; margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 14px;">
+                    ⚠️ <strong>Note:</strong> AI-Enhanced analysis requires an OpenAI API key to be configured. 
+                    <a href="#" onclick="alert('To use AI-Enhanced analysis:\\n\\n1. Create a config.py file\\n2. Add your OpenAI API key: OPENAI_API_KEY = \"your-key-here\"\\n3. See OPENAI_SETUP.md for detailed instructions')" style="color: #007acc;">How to configure?</a>
+                </div>
+            </div>
+            
             <div style="text-align: center;">
                 <button type="submit" class="btn" id="analyzeBtn">
                     🚀 Analyze Model
@@ -242,6 +268,20 @@ HTML_TEMPLATE = """
         });
         
         fileInput.addEventListener('change', updateFileDisplay);
+        
+        // Analyzer type selection handling
+        const analyzerRadios = document.querySelectorAll('input[name="analyzer_type"]');
+        const aiWarning = document.getElementById('aiWarning');
+        
+        analyzerRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'ai_enhanced') {
+                    aiWarning.style.display = 'block';
+                } else {
+                    aiWarning.style.display = 'none';
+                }
+            });
+        });
         
         function updateFileDisplay() {
             const files = fileInput.files;
@@ -301,6 +341,10 @@ HTML_TEMPLATE = """
                 formData.append('files', file);
             }
             
+            // Add analyzer type selection
+            const selectedAnalyzer = document.querySelector('input[name="analyzer_type"]:checked').value;
+            formData.append('analyzer_type', selectedAnalyzer);
+            
             try {
                 const response = await fetch('/analyze', {
                     method: 'POST',
@@ -358,8 +402,23 @@ HTML_TEMPLATE = """
             const summary = results.summary;
             const violations = results.violations;
             
+            // Analyzer type info
+            let analyzerInfo = '';
+            const analyzerType = results.analyzer_type || 'regular';
+            
+            if (analyzerType === 'ai_enhanced') {
+                analyzerInfo = '<div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px;">🤖 <strong>AI-Enhanced Analysis</strong> - Results include strategic recommendations and detailed explanations</div>';
+            } else if (results.ai_fallback_reason) {
+                analyzerInfo = `<div style="background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 10px; margin-bottom: 15px; border-radius: 4px;">⚠️ <strong>AI Analysis Failed</strong> - Fell back to regular analysis<br><small>Reason: ${results.ai_fallback_reason}</small></div>`;
+            } else if (results.ai_unavailable_reason) {
+                analyzerInfo = `<div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px;">❌ <strong>AI Analysis Unavailable</strong><br><small>${results.ai_unavailable_reason}</small></div>`;
+            } else {
+                analyzerInfo = '<div style="background-color: #e2e3e5; border: 1px solid #d6d8db; color: #383d41; padding: 10px; margin-bottom: 15px; border-radius: 4px;">⚡ <strong>Regular Analysis</strong> - Fast rule-based checking</div>';
+            }
+            
             // Display summary
             const summaryHtml = `
+                ${analyzerInfo}
                 <div class="summary-card">
                     <h3>📈 Model Overview</h3>
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
@@ -472,6 +531,8 @@ def analyze():
     """Analyze uploaded TMDL files"""
     try:
         files = request.files.getlist('files')
+        analyzer_type = request.form.get('analyzer_type', 'regular')
+        
         if not files:
             return "No files uploaded", 400
         
@@ -531,13 +592,35 @@ def analyze():
             if not os.path.exists(rules_file):
                 return "BPARules.json not found", 500
             
-            # Run analysis
-            agent = TMDLBestPracticesAgent(rules_file)
-            result = agent.analyze_model(model_path)
+            # Run analysis based on selected analyzer type
+            if analyzer_type == 'ai_enhanced' and AI_AVAILABLE:
+                try:
+                    # Use AI-enhanced analyzer
+                    agent = AIEnhancedTMDLAnalyzer(rules_file)
+                    result = agent.analyze_model(model_path)
+                    # Add metadata to indicate AI analysis was used
+                    result['analyzer_type'] = 'ai_enhanced'
+                except Exception as ai_error:
+                    # Fall back to regular analyzer if AI fails
+                    app.logger.warning(f"AI-enhanced analysis failed, falling back to regular: {ai_error}")
+                    agent = TMDLBestPracticesAgent(rules_file)
+                    result = agent.analyze_model(model_path)
+                    result['analyzer_type'] = 'regular'
+                    result['ai_fallback_reason'] = str(ai_error)
+            else:
+                # Use regular analyzer
+                agent = TMDLBestPracticesAgent(rules_file)
+                result = agent.analyze_model(model_path)
+                result['analyzer_type'] = 'regular'
+                if analyzer_type == 'ai_enhanced' and not AI_AVAILABLE:
+                    result['ai_unavailable_reason'] = 'AI-enhanced analyzer not available. Please check ai_enhanced_analyzer.py and OpenAI configuration.'
             
             # Convert result to JSON serializable format
             serializable_result = {
                 'summary': result['summary'],
+                'analyzer_type': result.get('analyzer_type', 'regular'),
+                'ai_fallback_reason': result.get('ai_fallback_reason'),
+                'ai_unavailable_reason': result.get('ai_unavailable_reason'),
                 'violations': [
                     {
                         'rule_id': v.rule_id,
