@@ -442,6 +442,17 @@ HTML_TEMPLATE = """
             
             document.getElementById('summarySection').innerHTML = summaryHtml;
             
+            // Display AI recommendations if available
+            if (results.ai_recommendations && results.ai_enhanced) {
+                const recommendationsHtml = `
+                    <div class="summary-card" style="background-color: #e7f3ff; border: 2px solid #0066cc;">
+                        <h3>🤖 AI Strategic Recommendations</h3>
+                        <div style="white-space: pre-wrap; line-height: 1.6;">${results.ai_recommendations}</div>
+                    </div>
+                `;
+                document.getElementById('summarySection').innerHTML += recommendationsHtml;
+            }
+            
             // Display violations by category
             const violationsByCategory = {};
             violations.forEach(violation => {
@@ -467,9 +478,16 @@ HTML_TEMPLATE = """
                             <div class="object-info">
                                 <strong>Object:</strong> ${violation.object_name} (${violation.object_type})
                                 <span class="severity-badge severity-${violation.severity.toLowerCase()}">${violation.severity}</span>
+                                ${violation.ai_enhanced ? '<span class="severity-badge" style="background-color: #0066cc; color: white; margin-left: 5px;">🤖 AI Enhanced</span>' : ''}
                             </div>
                             <div class="object-info"><strong>File:</strong> ${violation.file_path}</div>
                             <p>${violation.description}</p>
+                            ${violation.ai_explanation ? `
+                                <div style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 12px; margin: 10px 0; border-radius: 4px;">
+                                    <strong>🤖 AI Expert Analysis:</strong>
+                                    <div style="margin-top: 8px; white-space: pre-wrap; line-height: 1.6;">${violation.ai_explanation}</div>
+                                </div>
+                            ` : ''}
                             ${violation.fix_suggestion ? `
                                 <div class="fix-suggestion">
                                     <strong>💡 Fix Suggestion:</strong> ${violation.fix_suggestion}
@@ -621,6 +639,8 @@ def analyze():
                 'analyzer_type': result.get('analyzer_type', 'regular'),
                 'ai_fallback_reason': result.get('ai_fallback_reason'),
                 'ai_unavailable_reason': result.get('ai_unavailable_reason'),
+                'ai_enhanced': result.get('ai_enhanced', False),
+                'ai_recommendations': result.get('ai_recommendations', ''),
                 'violations': [
                     {
                         'rule_id': v.rule_id,
@@ -631,7 +651,9 @@ def analyze():
                         'object_name': v.object_name,
                         'object_type': v.object_type,
                         'file_path': v.file_path,
-                        'fix_suggestion': v.fix_suggestion
+                        'fix_suggestion': v.fix_suggestion,
+                        'ai_explanation': getattr(v, 'properties', {}).get('ai_explanation', ''),
+                        'ai_enhanced': getattr(v, 'properties', {}).get('ai_enhanced', False)
                     }
                     for v in result['violations']
                 ],

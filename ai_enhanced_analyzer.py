@@ -5,10 +5,23 @@ This extends the base analyzer with AI-powered explanations and suggestions.
 """
 
 import os
-import openai
+from openai import OpenAI
 from typing import List, Optional
 from tmdl_analyzer import TMDLBestPracticesAgent, Violation
 import json
+
+# Try to import config file
+try:
+    import config
+    DEFAULT_API_KEY = getattr(config, 'OPENAI_API_KEY', None)
+    DEFAULT_MODEL = getattr(config, 'OPENAI_MODEL', 'gpt-4')
+    DEFAULT_MAX_TOKENS = getattr(config, 'MAX_TOKENS', 300)
+    DEFAULT_TEMPERATURE = getattr(config, 'TEMPERATURE', 0.3)
+except ImportError:
+    DEFAULT_API_KEY = None
+    DEFAULT_MODEL = 'gpt-4'
+    DEFAULT_MAX_TOKENS = 300
+    DEFAULT_TEMPERATURE = 0.3
 
 class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
     """Enhanced analyzer with OpenAI integration"""
@@ -16,18 +29,104 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
     def __init__(self, rules_file: str, openai_api_key: Optional[str] = None):
         super().__init__(rules_file)
         
-        # Set up OpenAI API key
+        # Set up OpenAI API key - priority: parameter > config.py > environment variable
+        api_key = None
         if openai_api_key:
-            openai.api_key = openai_api_key
+            api_key = openai_api_key
+        elif DEFAULT_API_KEY:
+            api_key = DEFAULT_API_KEY
         else:
             # Try to get from environment variable
-            openai.api_key = os.getenv('OPENAI_API_KEY')
+            api_key = os.getenv('OPENAI_API_KEY')
         
-        if not openai.api_key:
+        if not api_key:
             self.logger.warning("OpenAI API key not provided. AI-enhanced features will be disabled.")
             self.ai_enabled = False
+            self.client = None
         else:
             self.ai_enabled = True
+            # Create client with timeout settings
+            self.client = OpenAI(
+                api_key=api_key,
+                timeout=30.0,  # 30 second timeout
+                max_retries=2
+            )
+            self.logger.info("OpenAI API key found. AI-enhanced features are enabled.")
+        
+        # Set model configuration
+        self.model = DEFAULT_MODEL
+        self.max_tokens = DEFAULT_MAX_TOKENS
+        self.temperature = DEFAULT_TEMPERATURE
+    
+    def analyze_model(self, model_path: str):
+        """Override to add AI enhancements to the analysis"""
+        # First, run the standard analysis
+        result = super().analyze_model(model_path)
+        
+        # If AI is not enabled, return standard result
+        if not self.ai_enabled:
+            self.logger.info("AI features disabled - returning standard analysis")
+            return result
+        
+        self.logger.info("Enhancing analysis with AI-powered insights...")
+        
+        # Add AI enhancements to violations (limit to first 5 to avoid timeouts)
+        enhanced_violations = []
+        violations_to_enhance = min(5, len(result['violations']))
+        
+        self.logger.info(f"Enhancing {violations_to_enhance} violations with AI explanations...")
+        
+        for i, violation in enumerate(result['violations']):
+            # Only enhance first few violations to avoid long wait times
+            if i < violations_to_enhance:
+                try:
+                    # Find the original object to get DAX code if it's a measure
+                    dax_code = ""
+                    for measure in result['objects'].get('measures', []):
+                        if measure.name == violation.object_name:
+                            dax_code = getattr(measure, 'expression', '')
+                            break
+                    
+                    # Get AI explanation
+                    self.logger.info(f"  Enhancing {i+1}/{violations_to_enhance}: {violation.object_name}...")
+                    ai_explanation = self.get_ai_explanation(violation, dax_code)
+                    
+                    # Create enhanced violation with AI explanation
+                    # Store AI explanation in the violation object's properties
+                    violation.properties = getattr(violation, 'properties', {})
+                    violation.properties['ai_explanation'] = ai_explanation
+                    violation.properties['ai_enhanced'] = True
+                    
+                except Exception as e:
+                    self.logger.warning(f"Could not enhance violation {violation.object_name}: {e}")
+                    violation.properties = getattr(violation, 'properties', {})
+                    violation.properties['ai_enhanced'] = False
+            else:
+                # Don't enhance remaining violations to save time/cost
+                violation.properties = getattr(violation, 'properties', {})
+                violation.properties['ai_enhanced'] = False
+            
+            enhanced_violations.append(violation)
+        
+        # Replace violations with enhanced ones
+        result['violations'] = enhanced_violations
+        
+        # Add strategic recommendations
+        try:
+            self.logger.info("Generating strategic recommendations...")
+            recommendations = self.get_ai_recommendations(enhanced_violations[:10])  # Limit summary to 10 violations
+            result['ai_recommendations'] = recommendations
+            result['ai_enhanced'] = True
+            self.logger.info("Strategic recommendations generated successfully!")
+        except Exception as e:
+            self.logger.error(f"Could not generate strategic recommendations: {e}")
+            import traceback
+            self.logger.error(traceback.format_exc())
+            result['ai_recommendations'] = f"Unable to generate recommendations: {str(e)}"
+            result['ai_enhanced'] = False
+        
+        self.logger.info("AI enhancement complete!")
+        return result
     
     def get_ai_explanation(self, violation: Violation, dax_code: str = "") -> str:
         """Get AI-powered explanation for a violation"""
@@ -56,14 +155,14 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
             Keep it concise but actionable.
             """
             
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a Power BI and DAX expert who explains technical concepts clearly."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=300,
-                temperature=0.3
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
             )
             
             return response.choices[0].message.content.strip()
@@ -107,14 +206,14 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
             Be specific and actionable.
             """
             
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a senior Power BI consultant providing strategic guidance."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=400,
-                temperature=0.3
+                max_tokens=min(self.max_tokens + 100, 500),  # Allow slightly more tokens for recommendations
+                temperature=self.temperature
             )
             
             return response.choices[0].message.content.strip()
@@ -145,14 +244,14 @@ class AIEnhancedTMDLAnalyzer(TMDLBestPracticesAgent):
             Provide specific, actionable suggestions.
             """
             
-            response = openai.ChatCompletion.create(
-                model="gpt-4",
+            response = self.client.chat.completions.create(
+                model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a DAX expert focused on performance and best practices."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=200,
-                temperature=0.3
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
             )
             
             return response.choices[0].message.content.strip()
