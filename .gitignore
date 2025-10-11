@@ -1,0 +1,28 @@
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Configuration files with sensitive information
+config.py
+
+# Python cache and virtual environment
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Analysis reports and temporary files
+*_report.md
+test_report.md
+demo_analysis_report.md
+analysis_report.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
