@@ -623,7 +623,14 @@ class TMDLBestPracticesAgent:
             'violations': {
                 'total': len(violations),
                 'by_severity': {},
-                'by_category': {}
+                'by_category': {},
+                'by_rule': {}
+            },
+            'rules_checked': {
+                'total': len(self.checker.rules),
+                'rules_with_violations': 0,
+                'rules_without_violations': 0,
+                'all_rules': []
             }
         }
         
@@ -636,6 +643,35 @@ class TMDLBestPracticesAgent:
         for violation in violations:
             category = violation.category
             summary['violations']['by_category'][category] = summary['violations']['by_category'].get(category, 0) + 1
+        
+        # Count violations by rule
+        for violation in violations:
+            rule_id = violation.rule_id
+            if rule_id not in summary['violations']['by_rule']:
+                summary['violations']['by_rule'][rule_id] = {
+                    'count': 0,
+                    'name': violation.rule_name,
+                    'category': violation.category,
+                    'severity': violation.severity.name
+                }
+            summary['violations']['by_rule'][rule_id]['count'] += 1
+        
+        # Add information about all rules checked
+        for rule in self.checker.rules:
+            rule_info = {
+                'id': rule.id,
+                'name': rule.name,
+                'category': rule.category,
+                'severity': rule.severity_level.name,
+                'violation_count': summary['violations']['by_rule'].get(rule.id, {}).get('count', 0),
+                'has_violations': rule.id in summary['violations']['by_rule']
+            }
+            summary['rules_checked']['all_rules'].append(rule_info)
+            
+            if rule_info['has_violations']:
+                summary['rules_checked']['rules_with_violations'] += 1
+            else:
+                summary['rules_checked']['rules_without_violations'] += 1
         
         return summary
     

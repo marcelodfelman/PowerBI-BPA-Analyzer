@@ -438,6 +438,41 @@ HTML_TEMPLATE = """
                         ).join(' ')}
                     </div>
                 </div>
+                
+                <div class="summary-card">
+                    <h3>✅ Rules Checked</h3>
+                    <div><strong>Total Rules Analyzed:</strong> ${summary.rules_checked.total}</div>
+                    <div><strong>Rules with Violations:</strong> ${summary.rules_checked.rules_with_violations}</div>
+                    <div><strong>Rules Passed (No Violations):</strong> ${summary.rules_checked.rules_without_violations}</div>
+                    <div style="margin-top: 15px;">
+                        <details>
+                            <summary style="cursor: pointer; font-weight: bold; padding: 8px; background-color: #f0f0f0; border-radius: 4px;">
+                                📋 View All Rules Checked (${summary.rules_checked.total})
+                            </summary>
+                            <div style="margin-top: 10px; max-height: 400px; overflow-y: auto;">
+                                ${summary.rules_checked.all_rules.map(rule => `
+                                    <div style="padding: 8px; margin: 5px 0; border-left: 3px solid ${rule.has_violations ? '#dc3545' : '#28a745'}; background-color: ${rule.has_violations ? '#fff5f5' : '#f0fff4'}; border-radius: 3px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div style="flex: 1;">
+                                                <strong>${rule.name}</strong>
+                                                <div style="font-size: 0.9em; color: #666; margin-top: 3px;">
+                                                    <span class="severity-badge severity-${rule.severity.toLowerCase()}" style="font-size: 0.8em;">${rule.severity}</span>
+                                                    <span style="margin-left: 8px;">${rule.category}</span>
+                                                </div>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                ${rule.has_violations 
+                                                    ? `<span style="color: #dc3545; font-weight: bold;">❌ ${rule.violation_count} violation${rule.violation_count > 1 ? 's' : ''}</span>` 
+                                                    : `<span style="color: #28a745; font-weight: bold;">✅ Passed</span>`
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </details>
+                    </div>
+                </div>
             `;
             
             document.getElementById('summarySection').innerHTML = summaryHtml;
