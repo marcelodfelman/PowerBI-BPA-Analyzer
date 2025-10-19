@@ -1,28 +1,71 @@
+# Power BI files
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
 
 # Configuration files with sensitive information
+src/config.py
 config.py
 
 # Python cache and virtual environment
 __pycache__/
+**/__pycache__/
 *.pyc
 *.pyo
+*.pyd
+.Python
 .venv/
 venv/
+env/
+ENV/
 
-# Analysis reports and temporary files
-*_report.md
-test_report.md
-demo_analysis_report.md
-analysis_report.md
+# Generated reports (keep reports/ folder structure but ignore generated files)
+reports/*.md
+reports/**/*.md
+!reports/.gitkeep
+
+# Test outputs
+tests/output/
+tests/*.log
+
+# Temporary files
+*.tmp
+*.temp
+.pytest_cache/
+.coverage
+htmlcov/
 
 # IDE and editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.project
+.pydevproject
 
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local

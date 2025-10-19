@@ -1,254 +1,518 @@
-# TMDL Best Practices Analyzer Agent
+# 📊 TMDL Best Practices Analyzer# TMDL Best Practices Analyzer Agent
 
-An AI-powered tool that analyzes Power BI TMDL (Tabular Model Definition Language) files against Microsoft's Analysis Services best practice rules.
 
-## Features
 
-- 🔍 **Comprehensive Analysis**: Analyzes tables, measures, columns, and relationships in TMDL files
-- 📊 **Best Practices Validation**: Checks against Microsoft's official Analysis Services best practice rules
-- 🚨 **Detailed Reporting**: Generates detailed reports with violations, severity levels, and fix suggestions
-- 🌐 **Web Interface**: Easy-to-use web interface for uploading and analyzing models
-- 📄 **Export Reports**: Download analysis reports in Markdown format
+A comprehensive tool for analyzing Power BI TMDL (Tabular Model Definition Language) files against Microsoft's Analysis Services best practice rules, with optional AI-enhanced recommendations.An AI-powered tool that analyzes Power BI TMDL (Tabular Model Definition Language) files against Microsoft's Analysis Services best practice rules.
+
+
+
+## 🚀 Quick Start## Features
+
+
+
+### Web Interface (Recommended)- 🔍 **Comprehensive Analysis**: Analyzes tables, measures, columns, and relationships in TMDL files
+
+```bash- 📊 **Best Practices Validation**: Checks against Microsoft's official Analysis Services best practice rules
+
+python run_web_interface.py- 🚨 **Detailed Reporting**: Generates detailed reports with violations, severity levels, and fix suggestions
+
+```- 🌐 **Web Interface**: Easy-to-use web interface for uploading and analyzing models
+
+Then open http://localhost:5000 in your browser.- 📄 **Export Reports**: Download analysis reports in Markdown format
+
 - ⚡ **Fast Processing**: Efficiently parses and analyzes large TMDL models
 
-## Installation
+### Command Line
 
-1. **Clone or download this repository**
+```bash## Installation
+
+python run_analyzer.py "path/to/YourModel.SemanticModel"
+
+```1. **Clone or download this repository**
+
 2. **Install Python dependencies**:
-   ```bash
+
+## 📁 Project Structure   ```bash
+
    pip install -r requirements.txt
-   ```
-3. **Ensure you have the BPARules.json file** (automatically downloaded from Microsoft's repository)
 
-## OpenAI Integration (Optional)
+```   ```
 
-The analyzer works perfectly **without** OpenAI, but you can enhance it with AI-powered features:
+PBIP/3. **Ensure you have the BPARules.json file** (automatically downloaded from Microsoft's repository)
 
-### Setting Up OpenAI API Key
+├── run_web_interface.py      # Launch web interface
 
-**Option 1: Environment Variable (Recommended)**
-```bash
-# Windows PowerShell
-$env:OPENAI_API_KEY = "sk-your-api-key-here"
+├── run_analyzer.py            # Command-line tool## OpenAI Integration (Optional)
 
-# Linux/Mac
-export OPENAI_API_KEY="sk-your-api-key-here"
-```
+├── requirements.txt           # Python dependencies
 
-**Option 2: Configuration File**
-1. Copy `config_template.py` to `config.py`
-2. Add your API key: `OPENAI_API_KEY = "sk-your-api-key-here"`
+├── .gitignore                # Git ignore rulesThe analyzer works perfectly **without** OpenAI, but you can enhance it with AI-powered features:
 
-**Get API Key**: Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+├── config_template.py        # OpenAI configuration template
 
-### AI-Enhanced Features
-- 🤖 **Smart Explanations**: Context-aware violation explanations
-- 📊 **Strategic Recommendations**: High-level improvement strategies
-- ⚡ **DAX Analysis**: Intelligent pattern detection
-- 💡 **Custom Fixes**: Specific, actionable suggestions
+│### Setting Up OpenAI API Key
 
-See `OPENAI_SETUP.md` for detailed instructions.
+├── src/                      # Source code
 
-## Usage
+│   ├── __init__.py**Option 1: Environment Variable (Recommended)**
 
-### Option 1: Command Line Interface
+│   ├── tmdl_analyzer.py      # Core analyzer```bash
 
-```bash
-python tmdl_analyzer.py <model_path> [rules_file] [output_file]
-```
+│   ├── ai_enhanced_analyzer.py  # AI-enhanced analyzer# Windows PowerShell
 
-**Examples:**
-```bash
-# Basic analysis
-python tmdl_analyzer.py "Sales Dashboard.SemanticModel"
+│   ├── web_interface.py      # Flask web app$env:OPENAI_API_KEY = "sk-your-api-key-here"
 
-# With custom rules file and output
+│   └── config.py             # Configuration (create from template)
+
+│# Linux/Mac
+
+├── data/                     # Data filesexport OPENAI_API_KEY="sk-your-api-key-here"
+
+│   └── BPARules.json         # Microsoft best practice rules```
+
+│
+
+├── tests/                    # Test files**Option 2: Configuration File**
+
+│   ├── test_ai_analyzer.py1. Copy `config_template.py` to `config.py`
+
+│   ├── test_ai_enhancements.py2. Add your API key: `OPENAI_API_KEY = "sk-your-api-key-here"`
+
+│   ├── test_column_references.py
+
+│   ├── test_rules.py**Get API Key**: Visit [OpenAI Platform](https://platform.openai.com/api-keys)
+
+│   └── debug_column_refs.py
+
+│### AI-Enhanced Features
+
+├── examples/                 # Example scripts- 🤖 **Smart Explanations**: Context-aware violation explanations
+
+│   ├── demo.py- 📊 **Strategic Recommendations**: High-level improvement strategies
+
+│   ├── quick_start_ai.py- ⚡ **DAX Analysis**: Intelligent pattern detection
+
+│   └── example_with_openai.py- 💡 **Custom Fixes**: Specific, actionable suggestions
+
+│
+
+├── docs/                     # DocumentationSee `OPENAI_SETUP.md` for detailed instructions.
+
+│   ├── OPENAI_SETUP.md
+
+│   ├── TROUBLESHOOTING.md## Usage
+
+│   ├── AI_CONFIGURATION_FIXED.md
+
+│   ├── AI_FIXES_COMPLETE.md### Option 1: Command Line Interface
+
+│   ├── AI_PERFORMANCE_FIXES.md
+
+│   ├── AI_RULE_TYPE_OPTIMIZATION.md```bash
+
+│   ├── RULE_LEVEL_AI_ENHANCEMENT.mdpython tmdl_analyzer.py <model_path> [rules_file] [output_file]
+
+│   └── ALL_RULES_VISIBILITY.md```
+
+│
+
+└── reports/                  # Generated reports**Examples:**
+
+    ├── analysis_report.md```bash
+
+    └── demo_analysis_report.md# Basic analysis
+
+```python tmdl_analyzer.py "Sales Dashboard.SemanticModel"
+
+
+
+## 📦 Installation# With custom rules file and output
+
 python tmdl_analyzer.py "Sales Dashboard.SemanticModel" BPARules.json report.md
 
+1. **Clone or download** this repository
+
 # Analyze different model
-python tmdl_analyzer.py "C:\Models\MyModel.SemanticModel" BPARules.json analysis.md
-```
 
-### Option 2: Web Interface
+2. **Install dependencies:**python tmdl_analyzer.py "C:\Models\MyModel.SemanticModel" BPARules.json analysis.md
 
-1. **Start the web server**:
-   ```bash
-   python web_interface.py
-   ```
+   ```bash```
 
-2. **Open your browser** and go to: `http://localhost:5000`
+   pip install -r requirements.txt
 
-3. **Upload your TMDL model directory** using the web interface
+   ```### Option 2: Web Interface
 
-4. **View results** and download reports directly from the browser
 
-## Best Practice Rules Checked
 
-The analyzer checks for violations in the following categories:
+3. **(Optional) Configure OpenAI for AI-enhanced analysis:**1. **Start the web server**:
 
-### Performance Rules
-- ❌ Avoid floating point data types (Double)
-- ⚡ Set IsAvailableInMdx to false on non-attribute columns
-- 🔄 Avoid excessive bi-directional relationships
-- 📊 Model should have a date table
+   ```bash   ```bash
+
+   # Windows   python web_interface.py
+
+   copy config_template.py src\\config.py   ```
+
+   
+
+   # Linux/Mac2. **Open your browser** and go to: `http://localhost:5000`
+
+   cp config_template.py src/config.py
+
+   3. **Upload your TMDL model directory** using the web interface
+
+   # Edit src/config.py and add your OpenAI API key
+
+   ```4. **View results** and download reports directly from the browser
+
+
+
+## 🎯 Features## Best Practice Rules Checked
+
+
+
+### Core AnalysisThe analyzer checks for violations in the following categories:
+
+- ✅ Parses TMDL files from Power BI semantic models
+
+- ✅ Checks 8+ best practice rules from Microsoft### Performance Rules
+
+- ✅ Identifies violations with severity levels- ❌ Avoid floating point data types (Double)
+
+- ✅ Provides fix suggestions where available- ⚡ Set IsAvailableInMdx to false on non-attribute columns
+
+- ✅ Generates detailed markdown reports- 🔄 Avoid excessive bi-directional relationships
+
+- ✅ Shows all rules checked (even those with 0 violations)- 📊 Model should have a date table
+
 - 🎯 Hide foreign keys
-- 📈 Reduce usage of calculated columns
 
-### DAX Expression Rules
-- 📝 Column references should be fully qualified
-- 🎯 Measure references should be unqualified
-- ➗ Use DIVIDE function instead of `/` operator
+### AI-Enhanced Analysis (Optional)- 📈 Reduce usage of calculated columns
+
+- 🤖 Strategic recommendations for your model
+
+- 🤖 Rule-level explanations (not per-violation to save costs)### DAX Expression Rules
+
+- 🤖 Priority ranking and effort estimates- 📝 Column references should be fully qualified
+
+- 🤖 Implementation strategies- 🎯 Measure references should be unqualified
+
+- 🤖 90% cost reduction vs. individual enhancements- ➗ Use DIVIDE function instead of `/` operator
+
 - 🚫 Avoid IFERROR function
-- 🔍 Filter expressions optimization
-- 📋 No duplicate measures
 
-### Formatting Rules
-- 🏷️ Provide format strings for measures
-- 📊 Hide fact table columns used in measures
-- 🔤 Object naming conventions
+### Web Interface- 🔍 Filter expressions optimization
+
+- 🌐 Drag & drop file upload- 📋 No duplicate measures
+
+- 🌐 Real-time analysis
+
+- 🌐 Interactive results viewer### Formatting Rules
+
+- 🌐 Expandable rule checklist- 🏷️ Provide format strings for measures
+
+- 🌐 Download reports- 📊 Hide fact table columns used in measures
+
+- 🌐 AI analyzer selector- 🔤 Object naming conventions
+
 - 📅 Date and month column formatting
-- 🔢 Numeric column summarization settings
 
-### Error Prevention Rules
+## 📖 Usage- 🔢 Numeric column summarization settings
+
+
+
+### Method 1: Web Interface### Error Prevention Rules
+
 - ✅ Data columns must have source columns
-- 📜 Expression-reliant objects must have expressions
-- 🔗 Relationship column data type consistency
-- 🚫 Avoid invalid characters in names
 
-### Maintenance Rules
-- 🧹 Remove unnecessary columns and measures
-- 🔗 Fix referential integrity violations
-- 📖 Add descriptions to objects
+```bash- 📜 Expression-reliant objects must have expressions
+
+python run_web_interface.py- 🔗 Relationship column data type consistency
+
+```- 🚫 Avoid invalid characters in names
+
+
+
+1. Open http://localhost:5000### Maintenance Rules
+
+2. Choose analyzer type (Regular or AI-Enhanced)- 🧹 Remove unnecessary columns and measures
+
+3. Upload your `.SemanticModel` folder- 🔗 Fix referential integrity violations
+
+4. View results and download report- 📖 Add descriptions to objects
+
 - 🎭 Remove unused perspectives and roles
+
+### Method 2: Command Line
 
 ## Output
 
-The analyzer generates comprehensive reports including:
+**Basic analysis:**
 
-- **Summary Statistics**: Count of tables, measures, columns, relationships
+```bashThe analyzer generates comprehensive reports including:
+
+python run_analyzer.py "Sales Dashboard.SemanticModel"
+
+```- **Summary Statistics**: Count of tables, measures, columns, relationships
+
 - **Violation Counts**: By severity (Error, Warning, Info) and category
-- **Detailed Violations**: Specific issues found with:
-  - Rule name and description
-  - Affected object and location
-  - Severity level
+
+**AI-enhanced analysis:**- **Detailed Violations**: Specific issues found with:
+
+```bash  - Rule name and description
+
+python run_analyzer.py "Sales Dashboard.SemanticModel" --ai  - Affected object and location
+
+```  - Severity level
+
   - Fix suggestions (where available)
 
-### Sample Output
+**Custom output:**
 
-```
+```bash### Sample Output
+
+python run_analyzer.py "Sales Dashboard.SemanticModel" --output "reports/my_report.md"
+
+``````
+
 # TMDL Best Practices Analysis Report
 
+### Method 3: Python API
+
 Model: Sales Dashboard.SemanticModel
-Analysis Date: 2025-10-11 17:12:01
 
-## Summary
+```pythonAnalysis Date: 2025-10-11 17:12:01
+
+import sys
+
+sys.path.insert(0, 'src')## Summary
+
 - Tables: 9
-- Measures: 56
-- Columns: 106
-- Relationships: 6
-- Total Violations: 166
 
-### Violations by Severity
-- WARNING: 90
+from tmdl_analyzer import TMDLBestPracticesAgent- Measures: 56
+
+- Columns: 106
+
+# Create analyzer- Relationships: 6
+
+agent = TMDLBestPracticesAgent('data/BPARules.json')- Total Violations: 166
+
+
+
+# Analyze model### Violations by Severity
+
+result = agent.analyze_model('Sales Dashboard.SemanticModel')- WARNING: 90
+
 - ERROR: 76
 
-### Violations by Category
-- Performance: 63
+# Generate report
+
+agent.generate_report(result, 'reports/output.md')### Violations by Category
+
+```- Performance: 63
+
 - DAX Expressions: 43
-- Formatting: 60
-```
+
+**AI-enhanced:**- Formatting: 60
+
+```python```
+
+from ai_enhanced_analyzer import AIEnhancedTMDLAnalyzer
 
 ## File Structure
 
-```
-PBIP/
-├── tmdl_analyzer.py          # Main analyzer engine
-├── web_interface.py          # Web interface
-├── BPARules.json            # Microsoft's best practice rules
-├── requirements.txt         # Python dependencies
-├── README.md               # This file
-└── Sales Dashboard.SemanticModel/  # Sample TMDL model
-    ├── definition/
-    │   ├── model.tmdl
-    │   ├── relationships.tmdl
-    │   └── tables/
-    │       ├── Fact_Sales.tmdl
-    │       ├── Dim_Customers.tmdl
-    │       └── ...
-    └── ...
-```
+agent = AIEnhancedTMDLAnalyzer('data/BPARules.json')
 
-## Technical Details
+result = agent.analyze_model('Sales Dashboard.SemanticModel')```
+
+```PBIP/
+
+├── tmdl_analyzer.py          # Main analyzer engine
+
+## 🔧 Configuration├── web_interface.py          # Web interface
+
+├── BPARules.json            # Microsoft's best practice rules
+
+### OpenAI API Key (for AI features)├── requirements.txt         # Python dependencies
+
+├── README.md               # This file
+
+Create `src/config.py`:└── Sales Dashboard.SemanticModel/  # Sample TMDL model
+
+```python    ├── definition/
+
+# OpenAI Configuration    │   ├── model.tmdl
+
+OPENAI_API_KEY = "sk-proj-your-api-key-here"    │   ├── relationships.tmdl
+
+OPENAI_MODEL = "gpt-4"  # or "gpt-3.5-turbo" for faster/cheaper    │   └── tables/
+
+MAX_TOKENS = 300    │       ├── Fact_Sales.tmdl
+
+TEMPERATURE = 0.3    │       ├── Dim_Customers.tmdl
+
+```    │       └── ...
+
+    └── ...
+
+Or set environment variable:```
+
+```bash
+
+# Windows## Technical Details
+
+set OPENAI_API_KEY=sk-proj-your-key-here
 
 ### TMDL Parser
-- Parses table definitions and extracts measures, columns, properties
-- Handles multi-line DAX expressions with proper escaping
-- Extracts relationship definitions and cardinalities
+
+# Linux/Mac- Parses table definitions and extracts measures, columns, properties
+
+export OPENAI_API_KEY=sk-proj-your-key-here- Handles multi-line DAX expressions with proper escaping
+
+```- Extracts relationship definitions and cardinalities
+
 - Supports complex TMDL syntax and annotations
 
+## 📊 Analysis Results
+
 ### Rule Engine
-- Implements Microsoft's Analysis Services best practice rules
+
+### What Gets Checked- Implements Microsoft's Analysis Services best practice rules
+
 - Supports rule expressions with pattern matching
-- Evaluates DAX code for common anti-patterns
+
+The analyzer checks all 8 rules from Microsoft's BPARules.json:- Evaluates DAX code for common anti-patterns
+
 - Provides contextual fix suggestions
 
-### Web Interface
-- Flask-based web application
-- Drag-and-drop file upload with directory support
-- Real-time progress tracking
-- Interactive results visualization
-- Downloadable reports
+1. **[Performance] Do not use floating point data types**
+
+2. **[Performance] Set IsAvailableInMdx to false on non-attribute columns**### Web Interface
+
+3. **[DAX Expressions] Column references should be fully qualified**- Flask-based web application
+
+4. **[DAX Expressions] Measure references should be unqualified**- Drag-and-drop file upload with directory support
+
+5. **[DAX Expressions] Use the DIVIDE function for division**- Real-time progress tracking
+
+6. **[DAX Expressions] Avoid using the IFERROR function**- Interactive results visualization
+
+7. **[Formatting] Provide format string for measures**- Downloadable reports
+
+8. **[Formatting] Hide foreign keys**
 
 ## Supported TMDL Elements
 
+### Results Include
+
 - ✅ **Tables**: Data tables and calculated tables
-- ✅ **Measures**: DAX measures with expressions and formatting
-- ✅ **Columns**: Data columns, calculated columns, and properties
-- ✅ **Relationships**: All relationship types and cardinalities
-- ✅ **Partitions**: Data source and query information
+
+- **Summary:** Object counts, violation totals by severity/category- ✅ **Measures**: DAX measures with expressions and formatting
+
+- **Rules Checked:** All 8 rules showing passed ✅ or violations ❌- ✅ **Columns**: Data columns, calculated columns, and properties
+
+- **Violations:** Detailed list with object info, descriptions, fix suggestions- ✅ **Relationships**: All relationship types and cardinalities
+
+- **AI Recommendations:** (AI mode) Strategic guidance and implementation plan- ✅ **Partitions**: Data source and query information
+
 - ✅ **Model Properties**: Model-level settings and annotations
+
+## 📚 Documentation
 
 ## Best Practices Covered
 
-The analyzer implements rules from Microsoft's official best practices guide:
-- [Analysis Services Best Practice Rules](https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules)
-- Performance optimization recommendations
+- **[docs/OPENAI_SETUP.md](docs/OPENAI_SETUP.md)** - Configure AI features
+
+- **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutionsThe analyzer implements rules from Microsoft's official best practices guide:
+
+- **[docs/RULE_LEVEL_AI_ENHANCEMENT.md](docs/RULE_LEVEL_AI_ENHANCEMENT.md)** - How AI analysis works- [Analysis Services Best Practice Rules](https://github.com/microsoft/Analysis-Services/tree/master/BestPracticeRules)
+
+- **[docs/ALL_RULES_VISIBILITY.md](docs/ALL_RULES_VISIBILITY.md)** - Understanding the rules checklist- Performance optimization recommendations
+
 - DAX coding standards
-- Data modeling best practices
+
+## 🧪 Testing- Data modeling best practices
+
 - Security and maintenance guidelines
 
-## Contributing
+Run tests:
 
-To add new rules or improve existing ones:
+```bash## Contributing
 
-1. **Add rules to BPARules.json** following Microsoft's format
-2. **Implement rule logic** in the `BestPracticesChecker` class
-3. **Add tests** for new functionality
-4. **Update documentation** with new rule descriptions
+# Navigate to tests directory
 
-## Troubleshooting
+cd testsTo add new rules or improve existing ones:
 
-### Common Issues
 
-**"Definition folder not found"**
-- Ensure you're pointing to the `.SemanticModel` directory
+
+# Run individual tests1. **Add rules to BPARules.json** following Microsoft's format
+
+python test_rules.py2. **Implement rule logic** in the `BestPracticesChecker` class
+
+python test_ai_analyzer.py3. **Add tests** for new functionality
+
+```4. **Update documentation** with new rule descriptions
+
+
+
+## 💡 Examples## Troubleshooting
+
+
+
+Check the `examples/` folder for sample scripts:### Common Issues
+
+- `demo.py` - Basic usage example
+
+- `quick_start_ai.py` - AI-enhanced quick start**"Definition folder not found"**
+
+- `example_with_openai.py` - Advanced AI integration- Ensure you're pointing to the `.SemanticModel` directory
+
 - Check that the `definition` folder exists with TMDL files
 
+## 🤝 Contributing
+
 **"BPARules.json not found"**
-- Ensure the rules file is in the same directory as the analyzer
-- Download from the Microsoft repository if missing
 
-**Web interface not starting**
-- Check that Flask is installed: `pip install flask`
+1. Fork the repository- Ensure the rules file is in the same directory as the analyzer
+
+2. Create a feature branch- Download from the Microsoft repository if missing
+
+3. Make your changes
+
+4. Test thoroughly**Web interface not starting**
+
+5. Submit a pull request- Check that Flask is installed: `pip install flask`
+
 - Ensure port 5000 is not in use
-- Try running with different port: modify `app.run(port=5001)`
 
-## License
+## 📄 License- Try running with different port: modify `app.run(port=5001)`
 
-This tool is provided as-is for educational and analysis purposes. The best practice rules are from Microsoft's official Analysis Services repository.
 
-## Version History
 
-- **v1.0.0** - Initial release with core analysis functionality
+This project uses Microsoft's BPARules.json for best practice rules.## License
+
+
+
+## 🆘 SupportThis tool is provided as-is for educational and analysis purposes. The best practice rules are from Microsoft's official Analysis Services repository.
+
+
+
+- Check [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues## Version History
+
+- Review example scripts in `examples/`
+
+- Check documentation in `docs/`- **v1.0.0** - Initial release with core analysis functionality
+
 - **v1.1.0** - Added web interface and improved reporting
-- **v1.2.0** - Enhanced TMDL parsing and additional rule support
+
+## 🎯 Roadmap- **v1.2.0** - Enhanced TMDL parsing and additional rule support
+
+
+- [ ] Add more Microsoft best practice rules
+- [ ] Support for custom rules
+- [ ] Export to different formats (JSON, CSV)
+- [ ] Integration with Power BI pipelines
+- [ ] Enhanced AI features
+
+---
+
+**Made with ❤️ for the Power BI community**

@@ -5,10 +5,16 @@ This extends the base analyzer with AI-powered explanations and suggestions.
 """
 
 import os
+import sys
+from pathlib import Path
 from openai import OpenAI
 from typing import List, Optional
-from tmdl_analyzer import TMDLBestPracticesAgent, Violation
 import json
+
+# Add parent directory to path to import modules
+sys.path.insert(0, str(Path(__file__).parent))
+
+from tmdl_analyzer import TMDLBestPracticesAgent, Violation
 
 # Try to import config file
 try:

@@ -6,11 +6,17 @@ This provides an easy-to-use web interface for analyzing Power BI TMDL files.
 
 from flask import Flask, render_template_string, request, jsonify, send_file
 import os
+import sys
 import json
-from tmdl_analyzer import TMDLBestPracticesAgent
+from pathlib import Path
 import tempfile
 import traceback
 from werkzeug.utils import secure_filename
+
+# Add parent directory to path to import modules
+sys.path.insert(0, str(Path(__file__).parent))
+
+from tmdl_analyzer import TMDLBestPracticesAgent
 
 # Try to import AI-enhanced analyzer (optional)
 try:
@@ -640,10 +646,11 @@ def analyze():
                 debug_structure = '\n'.join(debug_info)
                 return f"No valid TMDL model found. Please ensure you upload a directory ending with '.SemanticModel' that contains a 'definition' folder.\n\nUploaded structure:\n{debug_structure}\n\n📖 See TROUBLESHOOTING.md for detailed help with folder structure and upload issues.", 400
             
-            # Get rules file path
-            rules_file = os.path.join(os.path.dirname(__file__), 'BPARules.json')
-            if not os.path.exists(rules_file):
-                return "BPARules.json not found", 500
+            # Get rules file path - now in data folder
+            project_root = Path(__file__).parent.parent
+            rules_file = str(project_root / 'data' / 'BPARules.json')
+            if not Path(rules_file).exists():
+                return f"BPARules.json not found at {rules_file}", 500
             
             # Run analysis based on selected analyzer type
             if analyzer_type == 'ai_enhanced' and AI_AVAILABLE:
@@ -708,7 +715,8 @@ def generate_report():
         data = request.get_json()
         
         # Create a temporary TMDLBestPracticesAgent to use its report generation
-        rules_file = os.path.join(os.path.dirname(__file__), 'BPARules.json')
+        project_root = Path(__file__).parent.parent
+        rules_file = str(project_root / 'data' / 'BPARules.json')
         agent = TMDLBestPracticesAgent(rules_file)
         
         # Reconstruct violations objects for report generation
@@ -751,9 +759,11 @@ def generate_report():
 
 if __name__ == '__main__':
     # Check if BPARules.json exists
-    rules_file = os.path.join(os.path.dirname(__file__), 'BPARules.json')
-    if not os.path.exists(rules_file):
-        print("Warning: BPARules.json not found. Please ensure it's in the same directory as this script.")
+    project_root = Path(__file__).parent.parent
+    rules_file = project_root / 'data' / 'BPARules.json'
+    if not rules_file.exists():
+        print(f"Warning: BPARules.json not found at {rules_file}")
+        print("Please ensure the data/BPARules.json file exists.")
     
     print("Starting TMDL Best Practices Analyzer Web Interface...")
     print("Open your browser and go to: http://localhost:5000")
