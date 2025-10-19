@@ -28,7 +28,7 @@ except ImportError:
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
-# HTML template for the web interface
+# HTML template for the web interface - Modern UI Design
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -36,216 +36,730 @@ HTML_TEMPLATE = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMDL Best Practices Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --success: #22c55e;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --card-bg: #1e293b;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
             padding: 20px;
-            background-color: #f5f5f5;
+            line-height: 1.6;
         }
+        
         .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        h1 {
-            color: #333;
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--shadow);
+            animation: fadeInDown 0.6s ease;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .header-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .header-link {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .main-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px var(--shadow);
+            border: 1px solid var(--border);
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .upload-area {
+            border: 3px dashed var(--border);
+            border-radius: 16px;
+            padding: 60px 40px;
             text-align: center;
             margin-bottom: 30px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .upload-area {
-            border: 2px dashed #ddd;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            margin-bottom: 20px;
-            background-color: #fafafa;
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(79, 70, 229, 0.1) 100%);
+            transform: translateY(-2px);
         }
+        
         .upload-area.dragover {
-            border-color: #007acc;
-            background-color: #f0f8ff;
+            border-color: var(--primary-light);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(79, 70, 229, 0.15) 100%);
+            transform: scale(1.02);
         }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .upload-area h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+        
         .btn {
-            background-color: #007acc;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 12px 24px;
+            padding: 14px 32px;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 16px;
+            font-weight: 600;
             margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
+        
         .btn:hover {
-            background-color: #005a9e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
         }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
         .btn:disabled {
-            background-color: #ccc;
+            background: var(--bg-tertiary);
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .analyzer-selection {
+            margin: 30px 0;
+            padding: 30px;
+            background: var(--bg-primary);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+        
+        .analyzer-selection h3 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+        
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .radio-option:hover {
+            border-color: var(--primary);
+            transform: translateX(5px);
+        }
+        
+        .radio-option input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        
+        .radio-option label {
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .radio-option strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+        
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--warning);
+            color: #fbbf24;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: var(--info);
+            color: #60a5fa;
+        }
+        
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: var(--success);
+            color: #4ade80;
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger);
+            color: #f87171;
+        }
+        
         .progress {
             display: none;
-            margin: 20px 0;
+            margin: 30px 0;
         }
+        
         .progress-bar {
             width: 100%;
-            height: 20px;
-            background-color: #f0f0f0;
+            height: 8px;
+            background: var(--bg-primary);
             border-radius: 10px;
             overflow: hidden;
+            box-shadow: inset 0 2px 4px var(--shadow);
         }
+        
         .progress-bar-fill {
             height: 100%;
-            background-color: #007acc;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
             width: 0%;
             transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
         }
+        
+        @keyframes shimmer {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+        
+        .progress-text {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         .results {
             display: none;
-            margin-top: 30px;
+            margin-top: 40px;
         }
+        
+        .results h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+        }
+        
         .summary-card {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        
+        .summary-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
             padding: 20px;
-            margin: 15px 0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
         }
-        .violation-item {
-            background-color: #fff;
-            border-left: 4px solid #dc3545;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 0 5px 5px 0;
+        
+        .stat-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
         }
-        .violation-item.warning {
-            border-left-color: #ffc107;
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            display: block;
         }
-        .violation-item.info {
-            border-left-color: #17a2b8;
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
+        
         .severity-badge {
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 5px;
         }
+        
         .severity-error {
-            background-color: #dc3545;
-            color: white;
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
         }
+        
         .severity-warning {
-            background-color: #ffc107;
-            color: #212529;
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
         }
+        
         .severity-info {
-            background-color: #17a2b8;
-            color: white;
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
-        .category-section {
-            margin-bottom: 30px;
+        
+        .violation-item {
+            background: var(--card-bg);
+            border-left: 4px solid var(--danger);
+            padding: 25px;
+            margin: 15px 0;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 15px var(--shadow);
+            transition: all 0.3s ease;
         }
-        .category-header {
-            background-color: #007acc;
-            color: white;
-            padding: 10px 15px;
-            border-radius: 5px;
+        
+        .violation-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+        
+        .violation-item.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .violation-item.info {
+            border-left-color: var(--info);
+        }
+        
+        .violation-item h4 {
+            color: var(--text-primary);
             margin-bottom: 15px;
+            font-size: 1.2rem;
         }
-        .error {
-            color: #dc3545;
-            margin: 10px 0;
-        }
+        
         .object-info {
             font-size: 14px;
-            color: #666;
-            margin: 5px 0;
+            color: var(--text-muted);
+            margin: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
+        
+        .category-section {
+            margin-bottom: 40px;
+        }
+        
+        .category-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .category-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .error {
+            color: var(--danger);
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
         .fix-suggestion {
-            background-color: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 10px;
-            margin-top: 10px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 12px;
+        }
+        
+        .ai-explanation {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            color: var(--text-secondary);
+        }
+        
+        details {
+            margin: 20px 0;
+        }
+        
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 15px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        
+        summary:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--primary);
+        }
+        
+        details[open] summary {
+            margin-bottom: 15px;
+            border-color: var(--primary);
+        }
+        
+        .rules-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .rules-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .rules-list::-webkit-scrollbar-track {
+            background: var(--bg-primary);
             border-radius: 4px;
+        }
+        
+        .rules-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        .rules-list::-webkit-scrollbar-thumb:hover {
+            background: var(--bg-tertiary);
+        }
+        
+        .rule-item {
+            padding: 15px;
+            margin: 8px 0;
+            border-left: 3px solid;
+            background: var(--card-bg);
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .rule-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .rule-item.passed {
+            border-left-color: var(--success);
+            background: rgba(34, 197, 94, 0.05);
+        }
+        
+        .rule-item.failed {
+            border-left-color: var(--danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-card {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🔍 TMDL Best Practices Analyzer</h1>
-        <p style="text-align: center; color: #666; margin-bottom: 20px;">
-            Analyze your Power BI TMDL files against Microsoft's Analysis Services best practices
-        </p>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <a href="#" onclick="window.open('https://github.com/microsoft/Analysis-Services/blob/master/BestPracticeRules/README.md', '_blank')" style="color: #007acc; text-decoration: none; margin-right: 20px;">📋 Best Practices Guide</a>
-            <span style="color: #ccc;">|</span>
-            <a href="#" onclick="alert('📖 TROUBLESHOOTING.md\\n\\nCommon issues:\\n• Make sure to select the .SemanticModel folder (not its parent)\\n• Folder must contain definition/ subfolder\\n• Export TMDL from Power BI: File → Export → Model → TMDL')" style="color: #007acc; text-decoration: none; margin-left: 20px;">🆘 Help & Troubleshooting</a>
+        <!-- Modern Header -->
+        <div class="header">
+            <h1>🔍 TMDL Analyzer</h1>
+            <p>Advanced Power BI TMDL analysis powered by Microsoft's best practices</p>
+            <div class="header-links">
+                <a href="https://github.com/microsoft/Analysis-Services/blob/master/BestPracticeRules/README.md" target="_blank" class="header-link">
+                    📋 Best Practices Guide
+                </a>
+                <a href="#" onclick="alert('📖 TROUBLESHOOTING\\n\\nCommon issues:\\n• Make sure to select the .SemanticModel folder (not its parent)\\n• Folder must contain definition/ subfolder\\n• Export TMDL from Power BI: File → Export → Model → TMDL')" class="header-link">
+                    🆘 Help & Troubleshooting
+                </a>
+            </div>
         </div>
         
-        <form id="uploadForm" enctype="multipart/form-data">
-            <div class="upload-area" id="uploadArea">
-                <h3>Upload TMDL Model Directory</h3>
-                <p><strong>Select your .SemanticModel folder</strong></p>
-                <p style="font-size: 14px; color: #666;">
-                    📁 Your folder should be named like "MyModel.SemanticModel" and contain a "definition" subfolder with TMDL files.
+        <!-- Main Content Card -->
+        <div class="main-card">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Upload TMDL Model Directory</h3>
+                    <p style="color: var(--text-secondary); margin: 10px 0;">
+                        Select your <strong>.SemanticModel</strong> folder
+                    </p>
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+                        Your folder should contain a "definition" subfolder with TMDL files
+                    </p>
+                    <input type="file" id="fileInput" name="files" multiple webkitdirectory directory style="display: none;">
+                    <button type="button" class="btn" onclick="document.getElementById('fileInput').click();">
+                        Choose Directory
+                    </button>
+                </div>
+                
+                <!-- Analyzer Type Selection -->
+                <div class="analyzer-selection">
+                    <h3>🤖 Analyzer Type</h3>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" name="analyzer_type" value="regular" id="regular" checked>
+                            <label for="regular">
+                                <strong>⚡ Regular Analyzer</strong>
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;">
+                                    Fast, rule-based analysis using Microsoft's best practices
+                                </div>
+                            </label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" name="analyzer_type" value="ai_enhanced" id="ai_enhanced">
+                            <label for="ai_enhanced">
+                                <strong>🤖 AI-Enhanced Analyzer</strong>
+                                <div style="color: var(--text-muted); font-size: 0.9rem; margin-top: 5px;">
+                                    Includes strategic recommendations and detailed explanations (requires OpenAI API key)
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div id="aiWarning" class="alert alert-warning" style="display: none; margin-top: 15px;">
+                        <strong>⚠️ Note:</strong> AI-Enhanced analysis requires an OpenAI API key to be configured. 
+                        <a href="#" onclick="alert('To use AI-Enhanced analysis:\\n\\n1. Create src/config.py\\n2. Add: OPENAI_API_KEY = \\\"your-key-here\\\"\\n3. See docs/OPENAI_SETUP.md for details')" style="color: #fbbf24; text-decoration: underline;">
+                            How to configure?
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Analyze Button -->
+                <div style="text-align: center;">
+                    <button type="submit" class="btn" id="analyzeBtn">
+                        🚀 Analyze Model
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Progress Indicator -->
+            <div class="progress" id="progress">
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text">
+                    <span class="spinner"></span> Analyzing your model...
                 </p>
-                <input type="file" id="fileInput" name="files" multiple webkitdirectory directory style="display: none;">
-                <button type="button" class="btn" onclick="document.getElementById('fileInput').click();">
-                    📂 Choose .SemanticModel Directory
-                </button>
-                <div style="margin-top: 15px; font-size: 12px; color: #888;">
-                    💡 Tip: Click "Choose Directory" and select your .SemanticModel folder (e.g., "Sales Dashboard.SemanticModel")
-                </div>
             </div>
             
-            <!-- Analyzer Type Selection -->
-            <div style="margin: 20px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
-                <h3 style="margin-top: 0; color: #333;">🤖 Analyzer Type</h3>
-                <div style="margin: 15px 0;">
-                    <label style="display: block; margin-bottom: 10px; cursor: pointer;">
-                        <input type="radio" name="analyzer_type" value="regular" checked style="margin-right: 8px;">
-                        <strong>Regular Analyzer</strong> - Fast, rule-based analysis using Microsoft's best practices
-                    </label>
-                    <label style="display: block; cursor: pointer;">
-                        <input type="radio" name="analyzer_type" value="ai_enhanced" style="margin-right: 8px;">
-                        <strong>AI-Enhanced Analyzer</strong> - Includes strategic recommendations and detailed explanations (requires OpenAI API key)
-                    </label>
-                </div>
-                <div id="aiWarning" style="display: none; margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 14px;">
-                    ⚠️ <strong>Note:</strong> AI-Enhanced analysis requires an OpenAI API key to be configured. 
-                    <a href="#" onclick="alert('To use AI-Enhanced analysis:\\n\\n1. Create a config.py file\\n2. Add your OpenAI API key: OPENAI_API_KEY = \"your-key-here\"\\n3. See OPENAI_SETUP.md for detailed instructions')" style="color: #007acc;">How to configure?</a>
-                </div>
-            </div>
+            <!-- Error Display -->
+            <div class="error" id="errorMsg"></div>
             
-            <div style="text-align: center;">
-                <button type="submit" class="btn" id="analyzeBtn">
-                    🚀 Analyze Model
-                </button>
-            </div>
-        </form>
-        
-        <div class="progress" id="progress">
-            <div class="progress-bar">
-                <div class="progress-bar-fill" id="progressFill"></div>
-            </div>
-            <p style="text-align: center; margin-top: 10px;">Analyzing model...</p>
-        </div>
-        
-        <div class="error" id="errorMsg"></div>
-        
-        <div class="results" id="results">
-            <h2>📊 Analysis Results</h2>
-            <div id="summarySection"></div>
-            <div id="violationsSection"></div>
-            
-            <div style="text-align: center; margin-top: 30px;">
-                <button class="btn" id="downloadBtn" onclick="downloadReport()">
-                    📄 Download Full Report
-                </button>
+            <!-- Results Section -->
+            <div class="results" id="results">
+                <h2>📊 Analysis Results</h2>
+                <div id="summarySection"></div>
+                <div id="violationsSection"></div>
+                
+                <div style="text-align: center; margin-top: 40px;">
+                    <button class="btn btn-success" id="downloadBtn" onclick="downloadReport()">
+                        📄 Download Full Report
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -303,26 +817,33 @@ HTML_TEMPLATE = """
                 
                 let statusIcon = "✅";
                 let statusText = "Files ready for analysis";
-                let statusColor = "#28a745";
+                let alertClass = "alert-success";
                 
                 if (!hasSemanticModel) {
                     statusIcon = "⚠️";
                     statusText = "Warning: No .SemanticModel folder detected";
-                    statusColor = "#ffc107";
+                    alertClass = "alert-warning";
                 } else if (!hasDefinition) {
                     statusIcon = "❌";
                     statusText = "Error: No definition folder found";
-                    statusColor = "#dc3545";
+                    alertClass = "alert-danger";
                 }
                 
                 // Get the root folder name
                 const rootFolder = fileList[0].webkitRelativePath.split('/')[0];
                 
                 uploadArea.innerHTML = `
-                    <h3>${statusIcon} Directory Selected</h3>
-                    <p><strong>Folder:</strong> ${rootFolder}</p>
-                    <p style="color: ${statusColor};">${statusText}</p>
-                    <p style="font-size: 14px; color: #666;">${files.length} files selected</p>
+                    <div class="upload-icon">${statusIcon}</div>
+                    <h3>Directory Selected</h3>
+                    <p style="color: var(--text-secondary); margin: 15px 0;">
+                        <strong>Folder:</strong> ${rootFolder}
+                    </p>
+                    <div class="alert ${alertClass}" style="display: inline-block; margin: 10px auto;">
+                        ${statusText}
+                    </div>
+                    <p style="font-size: 14px; color: var(--text-muted); margin: 15px 0;">
+                        ${files.length} files selected
+                    </p>
                     <button type="button" class="btn" onclick="document.getElementById('fileInput').click();">
                         📂 Choose Different Directory
                     </button>
@@ -413,13 +934,13 @@ HTML_TEMPLATE = """
             const analyzerType = results.analyzer_type || 'regular';
             
             if (analyzerType === 'ai_enhanced') {
-                analyzerInfo = '<div style="background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 4px;">🤖 <strong>AI-Enhanced Analysis</strong> - Results include strategic recommendations and detailed explanations</div>';
+                analyzerInfo = '<div class="alert alert-success">🤖 <strong>AI-Enhanced Analysis</strong> - Results include strategic recommendations and detailed explanations</div>';
             } else if (results.ai_fallback_reason) {
-                analyzerInfo = `<div style="background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 10px; margin-bottom: 15px; border-radius: 4px;">⚠️ <strong>AI Analysis Failed</strong> - Fell back to regular analysis<br><small>Reason: ${results.ai_fallback_reason}</small></div>`;
+                analyzerInfo = `<div class="alert alert-warning">⚠️ <strong>AI Analysis Failed</strong> - Fell back to regular analysis<br><small>Reason: ${results.ai_fallback_reason}</small></div>`;
             } else if (results.ai_unavailable_reason) {
-                analyzerInfo = `<div style="background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 10px; margin-bottom: 15px; border-radius: 4px;">❌ <strong>AI Analysis Unavailable</strong><br><small>${results.ai_unavailable_reason}</small></div>`;
+                analyzerInfo = `<div class="alert alert-danger">❌ <strong>AI Analysis Unavailable</strong><br><small>${results.ai_unavailable_reason}</small></div>`;
             } else {
-                analyzerInfo = '<div style="background-color: #e2e3e5; border: 1px solid #d6d8db; color: #383d41; padding: 10px; margin-bottom: 15px; border-radius: 4px;">⚡ <strong>Regular Analysis</strong> - Fast rule-based checking</div>';
+                analyzerInfo = '<div class="alert alert-info">⚡ <strong>Regular Analysis</strong> - Fast rule-based checking</div>';
             }
             
             // Display summary
@@ -427,57 +948,81 @@ HTML_TEMPLATE = """
                 ${analyzerInfo}
                 <div class="summary-card">
                     <h3>📈 Model Overview</h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                        <div><strong>Tables:</strong> ${summary.object_counts.tables}</div>
-                        <div><strong>Measures:</strong> ${summary.object_counts.measures}</div>
-                        <div><strong>Columns:</strong> ${summary.object_counts.columns}</div>
-                        <div><strong>Relationships:</strong> ${summary.object_counts.relationships}</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">${summary.object_counts.tables}</span>
+                            <span class="stat-label">Tables</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${summary.object_counts.measures}</span>
+                            <span class="stat-label">Measures</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${summary.object_counts.columns}</span>
+                            <span class="stat-label">Columns</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${summary.object_counts.relationships}</span>
+                            <span class="stat-label">Relationships</span>
+                        </div>
                     </div>
                 </div>
                 
                 <div class="summary-card">
                     <h3>⚠️ Violations Summary</h3>
-                    <div><strong>Total Violations:</strong> ${summary.violations.total}</div>
-                    <div style="margin-top: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <div class="stat-item" style="display: inline-block; min-width: 200px;">
+                            <span class="stat-number" style="font-size: 3rem;">${summary.violations.total}</span>
+                            <span class="stat-label">Total Violations</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
                         ${Object.entries(summary.violations.by_severity).map(([severity, count]) => 
                             `<span class="severity-badge severity-${severity.toLowerCase()}">${severity}: ${count}</span>`
-                        ).join(' ')}
+                        ).join('')}
                     </div>
                 </div>
                 
                 <div class="summary-card">
                     <h3>✅ Rules Checked</h3>
-                    <div><strong>Total Rules Analyzed:</strong> ${summary.rules_checked.total}</div>
-                    <div><strong>Rules with Violations:</strong> ${summary.rules_checked.rules_with_violations}</div>
-                    <div><strong>Rules Passed (No Violations):</strong> ${summary.rules_checked.rules_without_violations}</div>
-                    <div style="margin-top: 15px;">
-                        <details>
-                            <summary style="cursor: pointer; font-weight: bold; padding: 8px; background-color: #f0f0f0; border-radius: 4px;">
-                                📋 View All Rules Checked (${summary.rules_checked.total})
-                            </summary>
-                            <div style="margin-top: 10px; max-height: 400px; overflow-y: auto;">
-                                ${summary.rules_checked.all_rules.map(rule => `
-                                    <div style="padding: 8px; margin: 5px 0; border-left: 3px solid ${rule.has_violations ? '#dc3545' : '#28a745'}; background-color: ${rule.has_violations ? '#fff5f5' : '#f0fff4'}; border-radius: 3px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <div style="flex: 1;">
-                                                <strong>${rule.name}</strong>
-                                                <div style="font-size: 0.9em; color: #666; margin-top: 3px;">
-                                                    <span class="severity-badge severity-${rule.severity.toLowerCase()}" style="font-size: 0.8em;">${rule.severity}</span>
-                                                    <span style="margin-left: 8px;">${rule.category}</span>
-                                                </div>
-                                            </div>
-                                            <div style="text-align: right;">
-                                                ${rule.has_violations 
-                                                    ? `<span style="color: #dc3545; font-weight: bold;">❌ ${rule.violation_count} violation${rule.violation_count > 1 ? 's' : ''}</span>` 
-                                                    : `<span style="color: #28a745; font-weight: bold;">✅ Passed</span>`
-                                                }
-                                            </div>
+                    <div class="stats-grid" style="margin-bottom: 20px;">
+                        <div class="stat-item">
+                            <span class="stat-number">${summary.rules_checked.total}</span>
+                            <span class="stat-label">Total Rules</span>
+                        </div>
+                        <div class="stat-item" style="border-color: var(--danger);">
+                            <span class="stat-number" style="color: #f87171;">${summary.rules_checked.rules_with_violations}</span>
+                            <span class="stat-label">With Violations</span>
+                        </div>
+                        <div class="stat-item" style="border-color: var(--success);">
+                            <span class="stat-number" style="color: #4ade80;">${summary.rules_checked.rules_without_violations}</span>
+                            <span class="stat-label">Passed</span>
+                        </div>
+                    </div>
+                    <details>
+                        <summary>
+                            📋 View All Rules Checked (${summary.rules_checked.total})
+                        </summary>
+                        <div class="rules-list" style="margin-top: 15px;">
+                            ${summary.rules_checked.all_rules.map(rule => `
+                                <div class="rule-item ${rule.has_violations ? 'failed' : 'passed'}">
+                                    <div style="flex: 1;">
+                                        <strong style="color: var(--text-primary);">${rule.name}</strong>
+                                        <div style="margin-top: 5px;">
+                                            <span class="severity-badge severity-${rule.severity.toLowerCase()}">${rule.severity}</span>
+                                            <span style="color: var(--text-muted); margin-left: 10px; font-size: 0.9em;">${rule.category}</span>
                                         </div>
                                     </div>
-                                `).join('')}
-                            </div>
-                        </details>
-                    </div>
+                                    <div style="text-align: right;">
+                                        ${rule.has_violations 
+                                            ? `<span style="color: #f87171; font-weight: bold;">❌ ${rule.violation_count} violation${rule.violation_count > 1 ? 's' : ''}</span>` 
+                                            : `<span style="color: #4ade80; font-weight: bold;">✅ Passed</span>`
+                                        }
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </details>
                 </div>
             `;
             
@@ -486,9 +1031,11 @@ HTML_TEMPLATE = """
             // Display AI recommendations if available
             if (results.ai_recommendations && results.ai_enhanced) {
                 const recommendationsHtml = `
-                    <div class="summary-card" style="background-color: #e7f3ff; border: 2px solid #0066cc;">
+                    <div class="summary-card" style="border: 2px solid var(--primary); background: rgba(99, 102, 241, 0.05);">
                         <h3>🤖 AI Strategic Recommendations</h3>
-                        <div style="white-space: pre-wrap; line-height: 1.6;">${results.ai_recommendations}</div>
+                        <div class="ai-explanation">
+                            <div style="white-space: pre-wrap; line-height: 1.8;">${results.ai_recommendations}</div>
+                        </div>
                     </div>
                 `;
                 document.getElementById('summarySection').innerHTML += recommendationsHtml;
@@ -508,7 +1055,7 @@ HTML_TEMPLATE = """
                 violationsHtml += `
                     <div class="category-section">
                         <div class="category-header">
-                            <h3>${category} (${categoryViolations.length} violations)</h3>
+                            <h3>${category} <span style="opacity: 0.8; font-weight: normal;">(${categoryViolations.length} violations)</span></h3>
                         </div>
                 `;
                 
@@ -517,16 +1064,16 @@ HTML_TEMPLATE = """
                         <div class="violation-item ${violation.severity.toLowerCase()}">
                             <h4>${violation.rule_name}</h4>
                             <div class="object-info">
-                                <strong>Object:</strong> ${violation.object_name} (${violation.object_type})
+                                <span><strong>Object:</strong> ${violation.object_name} (${violation.object_type})</span>
                                 <span class="severity-badge severity-${violation.severity.toLowerCase()}">${violation.severity}</span>
-                                ${violation.ai_enhanced ? '<span class="severity-badge" style="background-color: #0066cc; color: white; margin-left: 5px;">🤖 AI Enhanced</span>' : ''}
+                                ${violation.ai_enhanced ? '<span class="severity-badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">🤖 AI Enhanced</span>' : ''}
                             </div>
                             <div class="object-info"><strong>File:</strong> ${violation.file_path}</div>
-                            <p>${violation.description}</p>
+                            <p style="color: var(--text-secondary); margin: 15px 0;">${violation.description}</p>
                             ${violation.ai_explanation ? `
-                                <div style="background-color: #e7f3ff; border-left: 4px solid #0066cc; padding: 12px; margin: 10px 0; border-radius: 4px;">
-                                    <strong>🤖 AI Expert Analysis:</strong>
-                                    <div style="margin-top: 8px; white-space: pre-wrap; line-height: 1.6;">${violation.ai_explanation}</div>
+                                <div class="ai-explanation">
+                                    <strong style="color: var(--primary-light);">🤖 AI Expert Analysis:</strong>
+                                    <div style="margin-top: 10px; white-space: pre-wrap; line-height: 1.8;">${violation.ai_explanation}</div>
                                 </div>
                             ` : ''}
                             ${violation.fix_suggestion ? `
