@@ -1,4 +1,4 @@
-# 📊 TMDL Best Practices Analyzer# TMDL Best Practices Analyzer Agent
+# 📊 Best Practices Analyzer through TMDL - Agent
 
 
 
@@ -6,38 +6,38 @@ A comprehensive tool for analyzing Power BI TMDL (Tabular Model Definition Langu
 
 
 
-## 🚀 Quick Start## Features
+## 🚀 Quick Start - Features
 
 
 
-### Web Interface (Recommended)- 🔍 **Comprehensive Analysis**: Analyzes tables, measures, columns, and relationships in TMDL files
+### Web Interface (Recommended)
+- 🔍 **Comprehensive Analysis**: Analyzes tables, measures, columns, and relationships in TMDL files
+- 📊 **Best Practices Validation**: Checks against Microsoft's official Analysis Services best practice rules
+- 🚨 **Detailed Reporting**: Generates detailed reports with violations, severity levels, and fix suggestions
+- 🌐 **Web Interface**: Easy-to-use web interface for uploading and analyzing models
 
-```bash- 📊 **Best Practices Validation**: Checks against Microsoft's official Analysis Services best practice rules
-
-python run_web_interface.py- 🚨 **Detailed Reporting**: Generates detailed reports with violations, severity levels, and fix suggestions
-
-```- 🌐 **Web Interface**: Easy-to-use web interface for uploading and analyzing models
-
-Then open http://localhost:5000 in your browser.- 📄 **Export Reports**: Download analysis reports in Markdown format
+Then open http://localhost:5000 in your browser.
+- 📄 **Export Reports**: Download analysis reports in Markdown format
 
 - ⚡ **Fast Processing**: Efficiently parses and analyzes large TMDL models
 
-### Command Line
-
-```bash## Installation
-
+### Command Line Interface
+```bash
 python run_analyzer.py "path/to/YourModel.SemanticModel"
-
-```1. **Clone or download this repository**
+```
+1. **Clone or download this repository**
 
 2. **Install Python dependencies**:
+```bash
+   pip install -r requirements.txt
+```
 
-## 📁 Project Structure   ```bash
+```bash
 
    pip install -r requirements.txt
+```
 
-```   ```
-
+## 📁 Project Structure   
 PBIP/3. **Ensure you have the BPARules.json file** (automatically downloaded from Microsoft's repository)
 
 ├── run_web_interface.py      # Launch web interface
@@ -134,24 +134,25 @@ python tmdl_analyzer.py "Sales Dashboard.SemanticModel" BPARules.json report.md
 
 # Analyze different model
 
-2. **Install dependencies:**python tmdl_analyzer.py "C:\Models\MyModel.SemanticModel" BPARules.json analysis.md
+2. **Install dependencies:**python tmdl_analyzer.py "C:\Models\MyModel.SemanticModel" BPARules.json analysis.md**
 
-   ```bash```
+```bash
 
    pip install -r requirements.txt
 
-   ```### Option 2: Web Interface
+```
+   ### Option 2: Web Interface
 
 
 
 3. **(Optional) Configure OpenAI for AI-enhanced analysis:**1. **Start the web server**:
-
-   ```bash   ```bash
-
+```bash
+   python web_interface.py
+   ```
    # Windows   python web_interface.py
-
+```bash
    copy config_template.py src\\config.py   ```
-
+```
    
 
    # Linux/Mac2. **Open your browser** and go to: `http://localhost:5000`
