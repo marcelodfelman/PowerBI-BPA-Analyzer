@@ -254,6 +254,41 @@ HTML_TEMPLATE = """
             color: var(--text-primary);
         }
         
+        .api-key-config {
+            padding: 25px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .api-key-config h4 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+        
+        .api-key-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .api-key-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .api-key-input::placeholder {
+            color: var(--text-muted);
+        }
+        
         .radio-group {
             display: flex;
             flex-direction: column;
@@ -731,6 +766,46 @@ HTML_TEMPLATE = """
                             How to configure?
                         </a>
                     </div>
+                    
+                    <!-- API Key Configuration -->
+                    <div id="apiKeyConfig" class="api-key-config" style="display: none; margin-top: 15px;">
+                        <h4 style="font-size: 1.1rem; margin-bottom: 15px; color: var(--text-primary);">🔑 API Key Configuration</h4>
+                        <div class="radio-group" style="gap: 10px;">
+                            <div class="radio-option" style="padding: 15px;">
+                                <input type="radio" name="api_key_source" value="environment" id="apiKeyEnv" checked>
+                                <label for="apiKeyEnv">
+                                    <strong>Use Environment/Config API Key</strong>
+                                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">
+                                        Use the API key stored in environment variables or config.py
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="radio-option" style="padding: 15px;">
+                                <input type="radio" name="api_key_source" value="custom" id="apiKeyCustom">
+                                <label for="apiKeyCustom">
+                                    <strong>Provide Custom API Key</strong>
+                                    <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">
+                                        Enter your OpenAI API key for this analysis only
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="customApiKeyInput" style="display: none; margin-top: 15px;">
+                            <label for="customApiKey" style="display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary);">
+                                OpenAI API Key:
+                            </label>
+                            <input 
+                                type="password" 
+                                id="customApiKey" 
+                                name="custom_api_key"
+                                placeholder="sk-..." 
+                                class="api-key-input"
+                                style="width: 100%; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 0.9rem;">
+                            <small style="color: var(--text-muted); display: block; margin-top: 5px;">
+                                ⚠️ Your API key will only be used for this analysis and will not be stored
+                            </small>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Analyze Button -->
@@ -797,13 +872,30 @@ HTML_TEMPLATE = """
         // Analyzer type selection handling
         const analyzerRadios = document.querySelectorAll('input[name="analyzer_type"]');
         const aiWarning = document.getElementById('aiWarning');
+        const apiKeyConfig = document.getElementById('apiKeyConfig');
         
         analyzerRadios.forEach(radio => {
             radio.addEventListener('change', function() {
                 if (this.value === 'ai_enhanced') {
                     aiWarning.style.display = 'block';
+                    apiKeyConfig.style.display = 'block';
                 } else {
                     aiWarning.style.display = 'none';
+                    apiKeyConfig.style.display = 'none';
+                }
+            });
+        });
+        
+        // API Key source selection handling
+        const apiKeySourceRadios = document.querySelectorAll('input[name="api_key_source"]');
+        const customApiKeyInput = document.getElementById('customApiKeyInput');
+        
+        apiKeySourceRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customApiKeyInput.style.display = 'block';
+                } else {
+                    customApiKeyInput.style.display = 'none';
                 }
             });
         });
@@ -876,6 +968,19 @@ HTML_TEMPLATE = """
             // Add analyzer type selection
             const selectedAnalyzer = document.querySelector('input[name="analyzer_type"]:checked').value;
             formData.append('analyzer_type', selectedAnalyzer);
+            
+            // Add API key configuration if AI-enhanced is selected
+            if (selectedAnalyzer === 'ai_enhanced') {
+                const apiKeySource = document.querySelector('input[name="api_key_source"]:checked').value;
+                formData.append('api_key_source', apiKeySource);
+                
+                if (apiKeySource === 'custom') {
+                    const customApiKey = document.getElementById('customApiKey').value;
+                    if (customApiKey) {
+                        formData.append('custom_api_key', customApiKey);
+                    }
+                }
+            }
             
             try {
                 const response = await fetch('/analyze', {
@@ -1152,6 +1257,8 @@ def analyze():
     try:
         files = request.files.getlist('files')
         analyzer_type = request.form.get('analyzer_type', 'regular')
+        api_key_source = request.form.get('api_key_source', 'environment')
+        custom_api_key = request.form.get('custom_api_key', None)
         
         if not files:
             return "No files uploaded", 400
@@ -1217,7 +1324,15 @@ def analyze():
             if analyzer_type == 'ai_enhanced' and AI_AVAILABLE:
                 try:
                     # Use AI-enhanced analyzer
-                    agent = AIEnhancedTMDLAnalyzer(rules_file)
+                    # Determine which API key to use
+                    openai_api_key = None
+                    if api_key_source == 'custom' and custom_api_key:
+                        openai_api_key = custom_api_key
+                        app.logger.info("Using custom API key provided by user")
+                    else:
+                        app.logger.info("Using environment/config API key")
+                    
+                    agent = AIEnhancedTMDLAnalyzer(rules_file, openai_api_key=openai_api_key)
                     result = agent.analyze_model(model_path)
                     # Add metadata to indicate AI analysis was used
                     result['analyzer_type'] = 'ai_enhanced'
