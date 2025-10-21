@@ -548,6 +548,11 @@ HTML_TEMPLATE = """
             background: rgba(239, 68, 68, 0.1);
             border-radius: 12px;
             border: 1px solid rgba(239, 68, 68, 0.3);
+            display: none;
+        }
+        
+        .error:not(:empty) {
+            display: block;
         }
         
         .fix-suggestion {
@@ -896,7 +901,7 @@ HTML_TEMPLATE = """
             document.getElementById('progress').style.display = 'block';
             document.getElementById('analyzeBtn').disabled = true;
             document.getElementById('results').style.display = 'none';
-            document.getElementById('errorMsg').textContent = '';
+            clearError();
             
             // Simulate progress
             let progress = 0;
@@ -921,11 +926,20 @@ HTML_TEMPLATE = """
         }
         
         function showError(message) {
-            document.getElementById('errorMsg').textContent = message;
+            const errorElement = document.getElementById('errorMsg');
+            errorElement.textContent = message;
+            errorElement.style.display = message ? 'block' : 'none';
             document.getElementById('results').style.display = 'none';
         }
         
+        function clearError() {
+            const errorElement = document.getElementById('errorMsg');
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+        }
+        
         function displayResults(results) {
+            clearError();
             const summary = results.summary;
             const violations = results.violations;
             
