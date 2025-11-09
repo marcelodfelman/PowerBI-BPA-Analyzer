@@ -941,10 +941,18 @@ HTML_TEMPLATE = """
                     <p style="font-size: 14px; color: var(--text-muted); margin: 15px 0;">
                         ${files.length} files selected
                     </p>
-                    <button type="button" class="btn" onclick="document.getElementById('fileInput').click();">
+                    <button type="button" class="btn" id="changeDirBtn">
                         📂 Choose Different Directory
                     </button>
                 `;
+                
+                // Re-attach event listener for the new button
+                document.getElementById('changeDirBtn').addEventListener('click', function() {
+                    // Clear the file input
+                    fileInput.value = '';
+                    // Trigger the file picker
+                    fileInput.click();
+                });
             }
         }
         
